@@ -1,0 +1,294 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>E-Learning Course Analytics System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <header class="header">
+        <h1>E-Learning Course Analytics System</h1>
+        <p>Course enrolment, completion and learning activity dashboard</p>
+    </header>
+
+    <main class="container">
+
+        <!-- SUMMARY CARDS -->
+        <section class="summary-cards">
+
+            <div class="card">
+                <h3>Total Enrolments</h3>
+                <p class="number">{{ summary.total_enrollments }}</p>
+            </div>
+
+            <div class="card">
+                <h3>Completed Enrolments</h3>
+                <p class="number">{{ summary.completed_enrollments }}</p>
+            </div>
+
+            <div class="card">
+                <h3>Active Enrolments</h3>
+                <p class="number">{{ summary.active_enrollments }}</p>
+            </div>
+
+            <div class="card">
+                <h3>Completion Rate</h3>
+                <p class="number">{{ summary.completion_rate }}%</p>
+            </div>
+
+        </section>
+
+        <!-- COURSE COMPARISON TABLE -->
+        <section class="panel">
+            <h2>Course Performance Summary</h2>
+
+            <p>
+                Compare enrolments and recorded course completions.
+                Cancelled enrolments are excluded.
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Course Name</th>
+                            <th>Enrolments</th>
+                            <th>Completions</th>
+                            <th>Completion Rate</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for course in courses %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ course.course_name }}</td>
+                            <td>{{ course.enrollments }}</td>
+                            <td>{{ course.completions }}</td>
+                            <td>
+                                {{ course.completion_rate if course.completion_rate is not none else 0 }}%
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">No course records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- COURSE CHART -->
+        <section class="panel">
+            <h2>Course Enrolments vs Completions</h2>
+            <p>Compare the number of enrolments and completions for each course.</p>
+
+            <div class="chart-container">
+                <canvas id="courseChart"></canvas>
+            </div>
+        </section>
+
+        <!-- WEEKLY ACTIVITY TABLE -->
+        <section class="panel">
+            <h2>Weekly Learning Activity Summary</h2>
+
+            <p>
+                This summary counts recorded activity entries by week.
+                It does not represent time spent learning.
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Week Starting</th>
+                            <th>Recorded Activities</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in weekly %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.week_start }}</td>
+                            <td>{{ item.activity_count }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3">No activity records found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- WEEKLY ACTIVITY CHART -->
+        <section class="panel">
+            <h2>Weekly Learning Activity Chart</h2>
+            <p>View how recorded activity counts change from week to week.</p>
+
+            <div class="chart-container">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </section>
+
+        <!-- INACTIVE ENROLMENTS TABLE -->
+        <section class="panel">
+            <h2>Inactive Enrolments</h2>
+
+            <p>
+                This operational report lists active enrolments that are at least
+                14 days old and have no recorded activity during the last 14 days.
+                This flag does not establish whether a learner is learning.
+            </p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Enrolment ID</th>
+                            <th>Roll Number</th>
+                            <th>Course</th>
+                            <th>Enrolment Date</th>
+                            <th>Last Recorded Activity</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in inactive %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.enrollment_id }}</td>
+                            <td>{{ item.roll_no }}</td>
+                            <td>{{ item.course_name }}</td>
+                            <td>{{ item.enrolled_at or "No date" }}</td>
+                            <td>{{ item.last_activity or "No activity recorded" }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6">No inactive enrolments found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PROJECT INFORMATION -->
+        <section class="panel information">
+            <h2>About This Project</h2>
+
+            <p>
+                The E-Learning Course Analytics System uses Python, Flask,
+                MySQL, Pandas, NumPy and data visualisation to summarise
+                course enrolments, completion rates and recorded learning activities.
+            </p>
+
+            <p>
+                Completion rate = completed eligible enrolments divided by
+                all eligible enrolments, multiplied by 100.
+                Cancelled enrolments are excluded.
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>E-Learning Course Analytics System | Student Project</p>
+    </footer>
+
+    <!-- CHART DATA AND CONFIGURATION -->
+    <script>
+        const courseNames = {{ courses | map(attribute='course_name') | list | tojson }};
+        const enrolments = {{ courses | map(attribute='enrollments') | list | tojson }};
+        const completions = {{ courses | map(attribute='completions') | list | tojson }};
+
+        const courseCanvas = document.getElementById("courseChart");
+
+        new Chart(courseCanvas, {
+            type: "bar",
+
+            data: {
+                labels: courseNames,
+
+                datasets: [
+                    {
+                        label: "Enrolments",
+                        data: enrolments
+                    },
+                    {
+                        label: "Completions",
+                        data: completions
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+        const weeks = {{ weekly | map(attribute='week_start') | list | tojson }};
+        const activityCounts = {{ weekly | map(attribute='activity_count') | list | tojson }};
+
+        const activityCanvas = document.getElementById("activityChart");
+
+        new Chart(activityCanvas, {
+            type: "line",
+
+            data: {
+                labels: weeks,
+
+                datasets: [
+                    {
+                        label: "Recorded Activities",
+                        data: activityCounts,
+                        tension: 0.25,
+                        fill: false
+                    }
+                ]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
+```

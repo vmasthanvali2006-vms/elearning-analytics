@@ -1,0 +1,5 @@
+course_id,course_name,enrolments,completions,completion_rate
+1,Python Programming,2,1,50.0
+2,Java Programming,1,1,100.0
+3,Web Development,1,0,0.0
+4,Database Management,1,0,0.0

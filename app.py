@@ -1,25 +1,42 @@
 
+# from flask import Flask, render_template, jsonify, request
+# import mysql.connector
+# import getpass
+# from datetime import datetime, date
+
+# app = Flask(__name__)
+
+# print("E-Learning Course Analytics System")
+# DB_PASSWORD = getpass.getpass("Enter MySQL password: ")
+import os
 from flask import Flask, render_template, jsonify, request
 import mysql.connector
-import getpass
 from datetime import datetime, date
 
 app = Flask(__name__)
 
 print("E-Learning Course Analytics System")
-DB_PASSWORD = getpass.getpass("Enter MySQL password: ")
 
 
 # --------------------------------------------------
 # DATABASE CONNECTION
 # --------------------------------------------------
 
+# def get_connection():
+#     return mysql.connector.connect(
+#         host="localhost",
+#         user="root",
+#         password=DB_PASSWORD,
+#         database="elearning_analytics",
+#         connection_timeout=5
+#     )
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password=DB_PASSWORD,
-        database="elearning_analytics",
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME", "elearning_analytics"),
+        port=int(os.getenv("DB_PORT", "3306")),
         connection_timeout=5
     )
 

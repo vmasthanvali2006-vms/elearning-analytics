@@ -1,3 +1,8 @@
+
+## Dashboard Preview
+
+![E-Learning Course Analytics Dashboard](dashboard.png)
+
 # E-Learning Course Analytics System
 
 ## Project Overview

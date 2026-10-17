@@ -9,6 +9,7 @@
 # print("E-Learning Course Analytics System")
 # DB_PASSWORD = getpass.getpass("Enter MySQL password: ")
 import os
+import time
 from flask import Flask, render_template, jsonify, request
 import mysql.connector
 from datetime import datetime, date
@@ -89,27 +90,38 @@ def valid_boolean(value):
     return type(value) is bool
 
 
+
 def run_query(sql, params=(), fetch=None, commit=False):
+    start_time = time.perf_counter()
     conn = get_connection()
+    connection_time = time.perf_counter() - start_time
     cursor = None
 
     try:
         cursor = conn.cursor(dictionary=True)
+
+        query_start = time.perf_counter()
         cursor.execute(sql, params)
 
         if fetch == "all":
-            return cursor.fetchall()
+            result = cursor.fetchall()
+        elif fetch == "one":
+            result = cursor.fetchone()
+        else:
+            result = {
+                "rowcount": cursor.rowcount,
+                "lastrowid": cursor.lastrowid
+            }
+            if commit:
+                conn.commit()
 
-        if fetch == "one":
-            return cursor.fetchone()
+        query_time = time.perf_counter() - query_start
 
-        result = {
-            "rowcount": cursor.rowcount,
-            "lastrowid": cursor.lastrowid
-        }
-
-        if commit:
-            conn.commit()
+        print(
+            f"DB timing | connect={connection_time:.3f}s "
+            f"| query_and_fetch={query_time:.3f}s",
+            flush=True
+        )
 
         return result
 

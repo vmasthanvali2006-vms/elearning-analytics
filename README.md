@@ -67,5 +67,54 @@ The application asks for the MySQL password in the terminal when required.
 python3 -m unittest -v test_app
 ```
 
+## Analytics Definitions and Acceptance Criteria
+
+### 1. Course Completion Rate
+Completion rate is calculated as:
+
+Completion Rate = (Completed Eligible Enrolments / Total Eligible Enrolments) × 100
+
+Cancelled enrolments are excluded from the denominator. Courses with zero eligible enrolments display 0% as a placeholder; this does not represent a measured completion rate.
+
+### 2. Weekly Activity Summary
+Recorded learning activities are grouped by week using their activity timestamps. The report counts recorded activities; it does not measure learning quality or ability.
+
+### 3. Inactive Enrolment Rule
+An enrolment is included in the inactive-enrolment report when:
+- Its status is active.
+- It was created at least 14 days ago.
+- It has no recorded activity in the last 14 days.
+
+### 4. Interpretation and Limitations
+No recorded activity does not prove that a learner has stopped learning. Activity records may be incomplete, so inactivity is used only as a reporting indicator.
+
+### 5. Generated Outputs
+- `course_completion_report.csv`
+- `weekly_activity_report.csv`
+- `inactive_enrollments.csv`
+- `weekly_activity.png`
+- `course_comparison.png`
+
+## Deployment
+
+The application is deployed using Render, with a hosted MySQL database provided by Aiven.
+
+Live Dashboard: https://elearning-analytics.onrender.com/
+
+## Updating the Project
+
+After making changes to the project, use the following Git commands to push updates to GitHub:
+
+```bash
+git status
+git add .
+git commit -m "Update project"
+git push origin main
+```
+
+If automatic deployment is enabled in Render, pushing changes to the configured GitHub branch can trigger a new deployment.
+
+**Security:** Do not commit database passwords, private keys, or other sensitive credentials to GitHub.
+
 ## Project Goal
 To demonstrate database management, Python backend development, data analysis, report generation, and visualization using an e-learning analytics use case.

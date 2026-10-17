@@ -13,6 +13,7 @@ import time
 from flask import Flask, render_template, jsonify, request
 import mysql.connector
 from datetime import datetime, date
+from flask import g
 
 app = Flask(__name__)
 
@@ -40,6 +41,10 @@ def get_connection():
         port=int(os.getenv("DB_PORT", "3306")),
         connection_timeout=5
     )
+def get_db_connection():
+    if "db_connection" not in g:
+        g.db_connection = get_connection()
+    return g.db_connection    
 
 
 # --------------------------------------------------
@@ -91,16 +96,15 @@ def valid_boolean(value):
 
 
 
+
 def run_query(sql, params=(), fetch=None, commit=False):
-    start_time = time.perf_counter()
-    conn = get_connection()
-    connection_time = time.perf_counter() - start_time
+    conn = get_db_connection()
     cursor = None
 
     try:
         cursor = conn.cursor(dictionary=True)
-
         query_start = time.perf_counter()
+
         cursor.execute(sql, params)
 
         if fetch == "all":
@@ -118,8 +122,7 @@ def run_query(sql, params=(), fetch=None, commit=False):
         query_time = time.perf_counter() - query_start
 
         print(
-            f"DB timing | connect={connection_time:.3f}s "
-            f"| query_and_fetch={query_time:.3f}s",
+            f"DB timing | query_and_fetch={query_time:.3f}s",
             flush=True
         )
 
@@ -133,6 +136,12 @@ def run_query(sql, params=(), fetch=None, commit=False):
     finally:
         if cursor is not None:
             cursor.close()
+            
+@app.teardown_appcontext
+def close_db_connection(exception=None):
+    conn = g.pop("db_connection", None)
+
+    if conn is not None:
         conn.close()
 
 

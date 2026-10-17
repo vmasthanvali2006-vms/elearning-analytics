@@ -98,7 +98,9 @@ def valid_boolean(value):
 
 
 def run_query(sql, params=(), fetch=None, commit=False):
+    connect_start = time.perf_counter()
     conn = get_db_connection()
+    connection_time = time.perf_counter() - connect_start
     cursor = None
 
     try:
@@ -122,9 +124,10 @@ def run_query(sql, params=(), fetch=None, commit=False):
         query_time = time.perf_counter() - query_start
 
         print(
-            f"DB timing | query_and_fetch={query_time:.3f}s",
-            flush=True
-        )
+    f"DB timing | connect={connection_time:.3f}s "
+    f"| query_and_fetch={query_time:.3f}s",
+    flush=True
+    )
 
         return result
 
